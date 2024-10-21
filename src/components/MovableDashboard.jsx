@@ -33,21 +33,21 @@ export default function MovableDashboard() {
 		{
 			id: "f",
 			type: "bar",
-			data: "sales",
+			data: [],
 			title: "Sales and Profit",
 			axes: { x: "X Axis", y: "Y Axis" },
 		},
 		{
 			id: "g",
 			type: "line",
-			data: "customers",
+			data: [],
 			title: "Customer Trends",
 			axes: { x: "X Axis", y: "Y Axis" },
 		},
 		{
 			id: "h",
 			type: "pie",
-			data: "products",
+			data: [],
 			title: "Product Distribution",
 			axes: { x: "X Axis", y: "Y Axis" },
 		},
@@ -89,22 +89,31 @@ export default function MovableDashboard() {
 		const newChart = {
 			id: newChartId,
 			type: newChartType,
-			data: newChartData,
+			data: axisPairs, // Store axis pairs as data
 			title: `${newChartData.charAt(0).toUpperCase() + newChartData.slice(1)} ${
 				newChartType.charAt(0).toUpperCase() + newChartType.slice(1)
 			} Chart`,
-			axes: axisPairs,
+			axes: axisPairs, // Keep the axis pairs
 		};
 
-		setCharts([...charts, newChart]);
 		setLayouts((prevLayouts) => ({
 			...prevLayouts,
 			lg: [...prevLayouts.lg, { i: newChartId, x: 0, y: Infinity, w: 6, h: 3 }],
 		}));
+
+		setCharts((prevCharts) => [...prevCharts, newChart]); // Add new chart to charts state
+
 		closeModal();
 	};
 
 	const renderChart = (chart) => {
+		console.log("🚀 ~ renderChart ~ chart:", chart);
+
+		// Check if data is empty
+		if (!chart.data || chart.data.length === 0) {
+			return; // Placeholder message
+		}
+
 		const axes = chart.axes && chart.axes.length > 0 ? chart.axes[0] : {};
 
 		switch (chart.type) {
@@ -113,6 +122,7 @@ export default function MovableDashboard() {
 					<SalesBarChart
 						xAxisLabel={axes.x || "X Axis"}
 						yAxisLabel={axes.y || "Y Axis"}
+						data={chart.data}
 					/>
 				);
 			case "line":
@@ -120,10 +130,11 @@ export default function MovableDashboard() {
 					<CustomerLineChart
 						xAxisLabel={axes.x || "X Axis"}
 						yAxisLabel={axes.y || "Y Axis"}
+						data={chart.data}
 					/>
 				);
 			case "pie":
-				return <ProductPieChart />;
+				return <ProductPieChart data={chart.data} />;
 			default:
 				return null;
 		}
@@ -157,6 +168,7 @@ export default function MovableDashboard() {
 					cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
 					rowHeight={100}
 				>
+					{/* Predefined static dashboard items */}
 					<div key="a" className="bg-white overflow-hidden shadow rounded-lg">
 						<div className="px-4 py-5 sm:p-6">
 							<h2 className="text-lg font-medium text-gray-900">
@@ -187,186 +199,114 @@ export default function MovableDashboard() {
 							</button>
 						</div>
 					</div>
-					<div key="c" className="bg-white overflow-hidden shadow rounded-lg">
-						<div className="px-4 py-5 sm:p-6">
-							<h2 className="text-lg font-medium text-gray-900">
-								Recent Orders
-							</h2>
-							<ul className="mt-3 divide-y divide-gray-200">
-								<li className="py-3">Order #1234</li>
-								<li className="py-3">Order #5678</li>
-							</ul>
-						</div>
-					</div>
-					<div key="d" className="bg-white overflow-hidden shadow rounded-lg">
-						<div className="px-4 py-5 sm:p-6">
-							<h2 className="text-lg font-medium text-gray-900">
-								Top Products
-							</h2>
-							<ul className="mt-3 divide-y divide-gray-200">
-								<li className="py-3">Product A</li>
-								<li className="py-3">Product B</li>
-							</ul>
-						</div>
-					</div>
-					<div key="e" className="bg-white overflow-hidden shadow rounded-lg">
-						<div className="px-4 py-5 sm:p-6">
-							<h2 className="text-lg font-medium text-gray-900">
-								User Feedback
-							</h2>
-							<p className="mt-3 text-sm text-gray-500">
-								Great product! Very useful.
-							</p>
-						</div>
-					</div>
-					{charts.map((chart) => (
-						<div
-							key={chart.id}
-							className="bg-white overflow-hidden shadow rounded-lg"
-						>
-							<div className="px-4 py-5 sm:p-6">
-								<h2 className="text-lg font-medium text-gray-900">
-									{chart.title}
-								</h2>
-								<div className="mt-3">{renderChart(chart)}</div>
+
+					{/* Dynamically rendered charts */}
+					{charts &&
+						charts.map((chart) => (
+							<div
+								key={chart.id}
+								className="bg-white overflow-hidden shadow rounded-lg"
+							>
+								<div className="px-4 py-5 sm:p-6">
+									<h2 className="text-lg font-medium text-gray-900">
+										{chart.title}
+									</h2>
+									<div className="mt-3">{renderChart(chart)}</div>
+								</div>
 							</div>
-						</div>
-					))}
+						))}
 				</ResponsiveGridLayout>
 			</main>
 
+			{/* Modal for adding new chart */}
 			{isModalOpen && (
-				<div
-					className="fixed z-10 inset-0 overflow-y-auto"
-					aria-labelledby="modal-title"
-					role="dialog"
-					aria-modal="true"
-				>
-					<div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-						<div
-							className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-							aria-hidden="true"
-						></div>
-						<span
-							className="hidden sm:inline-block sm:align-middle sm:h-screen"
-							aria-hidden="true"
-						>
-							&#8203;
-						</span>
-						<div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-							<div className="absolute top-0 right-0 pt-4 pr-4">
-								<button
-									type="button"
-									className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-									onClick={closeModal}
-								>
-									<span className="sr-only">Close</span>
-									<X className="h-6 w-6" aria-hidden="true" />
-								</button>
-							</div>
-							<div className="sm:flex sm:items-start">
-								<div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-									<h3
-										className="text-lg leading-6 font-medium text-gray-900"
-										id="modal-title"
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-75">
+					<div className="bg-white rounded-lg p-4 w-full max-w-md">
+						<h2 className="text-lg font-medium mb-4">Add New Chart</h2>
+						<div className="mb-4">
+							<label className="block text-sm font-medium text-gray-700">
+								Chart Type
+							</label>
+							<select
+								value={newChartType}
+								onChange={(e) => setNewChartType(e.target.value)}
+								className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
+							>
+								<option value="bar">Bar</option>
+								<option value="line">Line</option>
+								<option value="pie">Pie</option>
+							</select>
+						</div>
+
+						<div className="mb-4">
+							<label className="block text-sm font-medium text-gray-700">
+								Data Source
+							</label>
+							<input
+								type="text"
+								value={newChartData}
+								onChange={(e) => setNewChartData(e.target.value)}
+								className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
+								placeholder="Enter data source (e.g., sales)"
+							/>
+						</div>
+
+						<div>
+							{axisPairs.map((pair, index) => (
+								<div key={index} className="flex space-x-2 mb-2">
+									<input
+										type="text"
+										value={pair.x}
+										onChange={(e) =>
+											handleAxisChange(index, "x", e.target.value)
+										}
+										className="flex-1 border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
+										placeholder="X Axis Label"
+									/>
+									<input
+										type="text"
+										value={pair.y}
+										onChange={(e) =>
+											handleAxisChange(index, "y", e.target.value)
+										}
+										className="flex-1 border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
+										placeholder="Y Axis Label"
+									/>
+									<button
+										type="button"
+										onClick={() => {
+											const newAxisPairs = [...axisPairs];
+											newAxisPairs.splice(index, 1);
+											setAxisPairs(newAxisPairs);
+										}}
+										className="text-red-500 hover:text-red-700"
 									>
-										Add New Chart
-									</h3>
-									<div className="mt-2">
-										<div className="mb-4">
-											<label
-												htmlFor="chart-type"
-												className="block text-sm font-medium text-gray-700"
-											>
-												Chart Type
-											</label>
-											<select
-												id="chart-type"
-												name="chart-type"
-												className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-												value={newChartType}
-												onChange={(e) => setNewChartType(e.target.value)}
-											>
-												<option value="bar">Bar Chart</option>
-												<option value="line">Line Chart</option>
-												<option value="pie">Pie Chart</option>
-											</select>
-										</div>
-										<div className="mb-4">
-											<label
-												htmlFor="data-source"
-												className="block text-sm font-medium text-gray-700"
-											>
-												Data Source
-											</label>
-											<select
-												id="data-source"
-												name="data-source"
-												className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-												value={newChartData}
-												onChange={(e) => setNewChartData(e.target.value)}
-											>
-												<option value="sales">Sales Data</option>
-												<option value="customers">Customer Data</option>
-												<option value="products">Product Data</option>
-											</select>
-										</div>
-										<div className="mb-4">
-											<label className="block text-sm font-medium text-gray-700">
-												Axis Labels
-											</label>
-											{axisPairs.map((pair, index) => (
-												<div
-													key={index}
-													className="mt-1 flex rounded-md shadow-sm"
-												>
-													<input
-														type="text"
-														placeholder="X Axis Label"
-														value={pair.x}
-														onChange={(e) =>
-															handleAxisChange(index, "x", e.target.value)
-														}
-														className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300"
-													/>
-													<input
-														type="text"
-														placeholder="Y Axis Label"
-														value={pair.y}
-														onChange={(e) =>
-															handleAxisChange(index, "y", e.target.value)
-														}
-														className="-ml-px flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300"
-													/>
-												</div>
-											))}
-											<button
-												type="button"
-												onClick={addAxisPair}
-												className="mt-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-											>
-												Add Axis Pair
-											</button>
-										</div>
-									</div>
+										<X className="h-5 w-5" />
+									</button>
 								</div>
-							</div>
-							<div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-								<button
-									type="button"
-									className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-									onClick={addNewChart}
-								>
-									Add Chart
-								</button>
-								<button
-									type="button"
-									className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
-									onClick={closeModal}
-								>
-									Cancel
-								</button>
-							</div>
+							))}
+						</div>
+						<button
+							type="button"
+							onClick={addAxisPair}
+							className="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+						>
+							Add Axis Pair
+						</button>
+
+						<div className="flex justify-end mt-4">
+							<button
+								onClick={addNewChart}
+								className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+							>
+								Save Chart
+							</button>
+							<button
+								onClick={closeModal}
+								className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-300 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+							>
+								Cancel
+							</button>
 						</div>
 					</div>
 				</div>
